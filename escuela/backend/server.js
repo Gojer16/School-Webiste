@@ -9,6 +9,7 @@ const userRoutes = require('./routes/userRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const professorRoutes = require('./routes/professorRoutes');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admins', adminRoutes);
+app.use('/api/professors', professorRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -45,4 +47,4 @@ const PORT = config.PORT;
 
 app.listen(PORT, () => {
     console.log(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);
-}); 
+});
