@@ -86,7 +86,7 @@ const ContactForm = () => {
       </div>
       <button
         type="submit"
-        className="bg-[#150261] text-white px-6 py-2 rounded-md hover:bg-[#C02E28] transition-colors duration-300"
+        className="bg-gradient-to-r from-[#150261] to-[#1a0275] text-white px-6 py-2 rounded-md hover:from-[#C02E28] hover:to-[#d83933] transition-all duration-300 transform hover:scale-[1.02]"
       >
         Enviar Mensaje
       </button>

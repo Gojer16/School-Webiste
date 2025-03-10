@@ -7,7 +7,7 @@ const Home = () => {
   return (
     <div>
       {/* Hero Section */}
-      <header className="bg-[#150261] text-white">
+      <header className="bg-gradient-to-r from-[#150261] via-[#1a0275] to-[#150261] text-white">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-3xl">
             <h1 className="text-4xl font-bold mb-4">
@@ -44,7 +44,7 @@ const Home = () => {
       </section>
 
       {/* About Section */}
-      <section className="bg-white py-16">
+      <section className="bg-gradient-to-b from-white to-gray-50 py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8 text-[#150261]">Sobre Nuestra Escuela</h2>
@@ -62,6 +62,10 @@ const Home = () => {
             
           </div>
         </div>
+      </section>
+
+      <section className="bg-gradient-to-tr from-gray-50 via-white to-gray-100 py-16 relative overflow-hidden">
+        {/* Additional content for the new section */}
       </section>
     </div>
   );

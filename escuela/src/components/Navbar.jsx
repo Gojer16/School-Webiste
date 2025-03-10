@@ -13,7 +13,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#150261] text-white">
+    <nav className="bg-gradient-to-r from-[#150261] via-[#1a0275] to-[#150261] text-white">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-3">
@@ -31,7 +31,7 @@ const Navbar = () => {
 
           {/* Telf Menu Boton */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-[#C02E28] transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-gradient-to-r hover:from-[#C02E28] hover:to-[#d83933] transition-all duration-300"
             onClick={toggleMenu}
             aria-label="Toggle menu"
           >

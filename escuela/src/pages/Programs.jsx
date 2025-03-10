@@ -46,7 +46,7 @@ const Programs = () => {
   ];
 
   return (
-    <div className="py-16 bg-gray-50">
+    <div className="py-16 bg-gradient-to-b from-gray-50 via-white to-gray-50">
       <div className="container mx-auto px-4">
         <h1 className="text-4xl font-bold text-[#150261] mb-12 text-center">Nuestros Programas</h1>
         
@@ -54,7 +54,7 @@ const Programs = () => {
           {programs.map((program, index) => {
             const Icon = program.icon;
             return (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">
+              <div key={index} className="bg-gradient-to-br from-white via-gray-50 to-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
                 <div className="flex justify-center">
                   <Icon className="w-12 h-12 text-[#C02E28] mb-4" />
                 </div>
