@@ -11,16 +11,20 @@ const transporter = nodemailer.createTransport({
 
 const sendContactEmail = async (contactData) => {
     const mailOptions = {
-        from: config.EMAIL_FROM,
-        to: config.EMAIL_USER, // Send to admin
-        subject: `New Contact Form Submission: ${contactData.subject}`,
+        from: contactData.email,
+        to: 'gojer@orlandoascanio.com',
+        subject: `Mensaje de ${contactData.name}: ${contactData.subject}`,
         html: `
-            <h2>New Contact Form Submission</h2>
-            <p><strong>From:</strong> ${contactData.name}</p>
-            <p><strong>Email:</strong> ${contactData.email}</p>
-            <p><strong>Subject:</strong> ${contactData.subject}</p>
-            <p><strong>Message:</strong></p>
-            <p>${contactData.message}</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #150261;">Nuevo Mensaje de Contacto</h2>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <p><strong>Nombre:</strong> ${contactData.name}</p>
+                    <p><strong>Email:</strong> ${contactData.email}</p>
+                    <p><strong>Asunto:</strong> ${contactData.subject}</p>
+                    <p><strong>Mensaje:</strong></p>
+                    <p style="white-space: pre-wrap;">${contactData.message}</p>
+                </div>
+            </div>
         `
     };
 
@@ -35,4 +39,4 @@ const sendContactEmail = async (contactData) => {
 
 module.exports = {
     sendContactEmail
-}; 
+};
