@@ -57,15 +57,12 @@ const Home = () => {
               preparar a los jóvenes para los desafíos del futuro.
             </p>
             
-            <div className="transform hover:scale-[1.02] transition-all duration-300 group">
-              <div className="relative rounded-lg overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#150261]/20 to-[#C02E28]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <img
-                  src={escuela}
-                  alt="Escuela"
-                  className="w-full rounded-lg shadow-md"
-                />
-              </div>
+            <div className="transform hover:scale-[1.02] transition-all duration-300">
+              <img
+                src={escuela}
+                alt="Escuela"
+                className="w-full rounded-lg"
+              />
             </div>
           </div>
         </div>
