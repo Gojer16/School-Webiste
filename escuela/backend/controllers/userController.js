@@ -98,8 +98,41 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+// @desc    Change user password
+// @route   PUT /api/users/change-password
+// @access  Private
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const user = await User.findByPk(req.user.id);
+
+        if (!user) {
+            res.status(404);
+            throw new Error('User not found');
+        }
+
+        // Check current password
+        const isMatch = await user.matchPassword(currentPassword);
+        if (!isMatch) {
+            res.status(401);
+            throw new Error('Current password is incorrect');
+        }
+
+        // Update password
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
-    getUserProfile
+    getUserProfile,
+    changePassword
 }; 
