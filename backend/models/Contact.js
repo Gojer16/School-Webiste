@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/db');
+const { sequelize } = require('../config/database'); // Destructure sequelize instance
 
 const Contact = sequelize.define('Contact', {
     id: {
@@ -34,4 +34,4 @@ const Contact = sequelize.define('Contact', {
     timestamps: true
 });
 
-module.exports = Contact; 
+module.exports = Contact;

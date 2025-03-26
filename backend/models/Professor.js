@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 const Professor = sequelize.define('Professor', {
   id: {
@@ -34,4 +34,4 @@ const Professor = sequelize.define('Professor', {
   timestamps: true
 });
 
-module.exports = Professor; 
+module.exports = Professor;

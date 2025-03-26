@@ -1,46 +1,82 @@
 const jwt = require('jsonwebtoken');
+const { ValidationError, NotFoundError, AuthError } = require('../errors');
 const User = require('../models/User');
 const config = require('../config/config');
 
-// Generate JWT
-const generateToken = (id) => {
-    return jwt.sign({ id }, config.JWT_SECRET, {
-        expiresIn: '30d',
+/**
+ * Generate JWT with user ID and role
+ * @param {string} id - User ID
+ * @param {string} role - User role
+ * @returns {string} JWT token
+ */
+const generateToken = (id, role) => {
+    return jwt.sign({ id, role }, config.JWT_SECRET, {
+        expiresIn: config.JWT_EXPIRATION
     });
 };
 
-// @desc    Register a new user
-// @route   POST /api/users/register
-// @access  Public
+/**
+ * @class UserController
+ * Handles user authentication and profile management
+ */
+
+/**
+ * Register new user account
+ * @route POST /api/users/register
+ * @access Public
+ * @param {Object} req.body - User credentials
+ * @returns {Object} User data and auth token
+ */
 const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        const userExists = await User.findOne({ where: { email } });
-
-        if (userExists) {
-            res.status(400);
-            throw new Error('User already exists');
+        // Validate input
+        if (!name?.trim() || !email?.trim() || !password?.trim()) {
+            throw new ValidationError('All fields are required');
         }
 
+        // Check existing user
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            throw new ValidationError('User already exists');
+        }
+
+        // Create user
         const user = await User.create({
-            name,
-            email,
-            password
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            password: password.trim()
         });
 
-        if (user) {
-            res.status(201).json({
+        // Generate token
+        const token = generateToken(user.id, user.role);
+
+        // Set secure HTTP-only cookie
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: config.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        });
+
+        res.status(201).json({
+            success: true,
+            data: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
-                token: generateToken(user.id)
-            });
-        }
+                role: user.role
+            },
+            token
+        });
+
     } catch (error) {
-        res.status(400).json({
-            message: error.message
+        const statusCode = error instanceof ValidationError ? 400 : 500;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message,
+            error: config.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };
@@ -52,23 +88,46 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ where: { email } });
+        if (!email?.trim() || !password?.trim()) {
+            throw new ValidationError('Email and password required');
+        }
 
-        if (user && (await user.matchPassword(password))) {
-            res.json({
+        const user = await User.findOne({ 
+            where: { email: email.toLowerCase().trim() } 
+        });
+
+        if (!user || !(await user.matchPassword(password))) {
+            throw new AuthError('Invalid credentials');
+        }
+
+        const token = generateToken(user.id, user.role);
+
+        // Set secure HTTP-only cookie
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: config.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({
+            success: true,
+            data: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
-                token: generateToken(user.id)
-            });
-        } else {
-            res.status(401);
-            throw new Error('Invalid email or password');
-        }
+                role: user.role
+            },
+            token
+        });
+
     } catch (error) {
-        res.status(401).json({
-            message: error.message
+        const statusCode = error instanceof AuthError ? 401 : 
+                         error instanceof ValidationError ? 400 : 500;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message,
+            error: config.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };
@@ -135,4 +194,4 @@ module.exports = {
     loginUser,
     getUserProfile,
     changePassword
-}; 
+};

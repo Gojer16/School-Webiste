@@ -1,50 +1,58 @@
+// Core dependencies
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const { connectDB } = require('./config/db');
-const config = require('./config/config');
+const cookieParser = require('cookie-parser');  // <-- Add this with other core dependencies
 
-// Routes
-const userRoutes = require('./routes/userRoutes');
-const teacherRoutes = require('./routes/teacherRoutes');
-const contactRoutes = require('./routes/contactRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const professorRoutes = require('./routes/professorRoutes');
+// Custom modules
+const { connectDB } = require('./config/database'); // Database connection utility
+const config = require('./config/config'); // Application configuration
 
-const app = express();
+// Route modules
+const userRoutes = require('./routes/userRoutes'); // User-related routes
+const teacherRoutes = require('./routes/teacherRoutes'); // Teacher-related routes
+const contactRoutes = require('./routes/contactRoutes'); // Contact form routes
+const adminRoutes = require('./routes/adminRoutes'); // Admin-related routes
+const professorRoutes = require('./routes/professorRoutes'); // Professor-related routes
 
-// Connect to database
-connectDB();
+// Initialize Express application
+const app = express();  // <-- App must be initialized first
 
-// Middleware
+// Then add middleware
+app.use(cookieParser());  // <-- Now this comes AFTER app initialization
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json()); // Parse incoming JSON requests
+app.use(express.urlencoded({ extended: false })); // Parse URL-encoded request bodies
 
-// Logger
+// Development logging
 if (config.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
+    app.use(morgan('dev')); // Use Morgan logger in development mode
 }
 
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/teachers', teacherRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/admins', adminRoutes);
-app.use('/api/professors', professorRoutes);
+// Route mounting
+app.use('/api/users', userRoutes); // Mount user routes
+app.use('/api/teachers', teacherRoutes); // Mount teacher routes
+app.use('/api/contact', contactRoutes); // Mount contact routes
+app.use('/api/admins', adminRoutes); // Mount admin routes
+app.use('/api/professors', professorRoutes); // Mount professor routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+    // Determine appropriate status code
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode);
+    
+    // Return error response
     res.json({
         message: err.message,
-        stack: config.NODE_ENV === 'production' ? null : err.stack,
+        stack: config.NODE_ENV === 'production' ? null : err.stack, // Hide stack trace in production
     });
 });
 
+// Server configuration
 const PORT = config.PORT;
 
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server running in ${config.NODE_ENV} mode on port ${PORT}`);
 });

@@ -6,13 +6,17 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: config.EMAIL_USER,
         pass: config.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
     }
 });
 
 const sendContactEmail = async (contactData) => {
     const mailOptions = {
-        from: contactData.email,
-        to: 'gojer@orlandoascanio.com',
+        from: config.EMAIL_FROM,  // Always use the configured sender email
+        replyTo: contactData.email,  // Allows recipients to reply to the sender
+        to: config.EMAIL_FROM,
         subject: `Mensaje de ${contactData.name}: ${contactData.subject}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

@@ -1,77 +1,95 @@
 const User = require('../models/User');
+const { NotFoundError, ForbiddenError } = require('../errors');
 
-// @desc    Get all admins
-// @route   GET /api/admins
-// @access  Private/Admin
+/**
+ * Admin controller for managing administrator accounts
+ * @class AdminController
+ */
+
+/**
+ * Retrieve all active administrators
+ * @route GET /api/admins
+ * @access Private/Admin
+ */
 const getAllAdmins = async (req, res) => {
     try {
         const admins = await User.findAll({
             where: { role: 'admin', isActive: true },
             attributes: { exclude: ['password'] }
         });
-        res.json(admins);
+        res.json({ success: true, count: admins.length, data: admins });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error retrieving administrators',
+            error: error.message 
+        });
     }
 };
 
-// @desc    Assign admin role
-// @route   PUT /api/admins/:id
-// @access  Private/Admin
+/**
+ * Grant administrator privileges to a user
+ * @route PUT /api/admins/:id
+ * @access Private/Admin
+ */
 const assignAdminRole = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
-        
-        if (!user) {
-            res.status(404);
-            throw new Error('User not found');
+        if (!user) throw new NotFoundError('User not found');
+        if (user.role === 'admin') {
+            return res.json({ 
+                success: true,
+                message: 'User already has administrator privileges',
+                data: user 
+            });
         }
 
-        const updatedUser = await user.update({
-            role: 'admin'
-        });
-
+        const updatedUser = await user.update({ role: 'admin' });
         res.json({
-            id: updatedUser.id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            role: updatedUser.role
+            success: true,
+            data: {
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role
+            }
         });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Error updating user role',
+            error: error.message
+        });
     }
 };
 
-// @desc    Remove admin (soft delete)
-// @route   DELETE /api/admins/:id
-// @access  Private/Admin
+/**
+ * Revoke administrator privileges (soft delete)
+ * @route DELETE /api/admins/:id
+ * @access Private/Admin
+ */
 const removeAdmin = async (req, res) => {
     try {
         const admin = await User.findByPk(req.params.id);
-        
-        if (!admin) {
-            res.status(404);
-            throw new Error('Admin not found');
-        }
-
-        if (admin.id === req.user.id) {
-            res.status(400);
-            throw new Error('Cannot remove yourself as admin');
-        }
+        if (!admin) throw new NotFoundError('Admin not found');
+        if (admin.id === req.user.id) throw new ForbiddenError('Cannot remove your own admin privileges');
 
         await admin.update({
             role: 'user',
             isActive: false
         });
 
-        res.json({ message: 'Admin removed successfully' });
+        res.json({ 
+            success: true,
+            message: 'Admin privileges revoked successfully'
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Error removing administrator',
+            error: error.message
+        });
     }
 };
 
-module.exports = {
-    getAllAdmins,
-    assignAdminRole,
-    removeAdmin
-}; 
+module.exports = { getAllAdmins, assignAdminRole, removeAdmin };

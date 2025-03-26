@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Professor = require('../models/Professor');
-const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+const { protect: verifyToken, admin: isAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
@@ -98,4 +98,4 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;
