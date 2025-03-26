@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
+import InstagramFeed from '../components/InstagramFeed';
 import escuela from '../assets/2.jpg';
 
 const Home = () => {
@@ -38,6 +39,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Instagram Feed Section */}
+      <InstagramFeed />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-tr from-[#150261]/10 via-white to-[#C02E28]/10 relative">

@@ -5,6 +5,7 @@ const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const professorRoutes = require('./routes/professorRoutes');
+const instagramRoutes = require('./routes/instagramRoutes');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/professors', professorRoutes);
+app.use('/api/instagram', instagramRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -28,4 +30,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-module.exports = app; 
+module.exports = app;
