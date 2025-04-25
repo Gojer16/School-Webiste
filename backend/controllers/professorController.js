@@ -1,21 +1,21 @@
 const Professor = require('../models/Professor');
 const { NotFoundError, ValidationError } = require('../errors');
+const sanitizeHtml = require('sanitize-html');
+const rateLimit = require('express-rate-limit');
 
-/**
- * @class ProfessorController
- * Handles professor-related operations including retrieval, creation, and status updates
- */
+const sanitizeProfessorInput = (input) => ({
+    name: sanitizeHtml(input.name, { allowedTags: [], allowedAttributes: {} }).substring(0, 100),
+    email: sanitizeHtml(input.email, { allowedTags: [], allowedAttributes: {} }).toLowerCase().substring(0, 254),
+    specialty: sanitizeHtml(input.specialty, { allowedTags: [], allowedAttributes: {} }).substring(0, 100),
+    photoUrl: input.photoUrl ? sanitizeHtml(input.photoUrl, { allowedTags: [], allowedAttributes: {} }) : null
+});
 
-const DEFAULT_PAGE_SIZE = 10;
+const professorRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: 'Too many requests, please try again later'
+});
 
-/**
- * Retrieve all active professors with pagination
- * @route GET /api/professors
- * @access Public
- * @param {number} [req.query.page=1] - Page number
- * @param {number} [req.query.limit=10] - Items per page
- * @returns {Object} Paginated list of professors
- */
 const getAllActiveProfessors = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -41,24 +41,28 @@ const getAllActiveProfessors = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to retrieve professors',
-            error: error.message
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
 
-/**
- * Create a new professor profile
- * @route POST /api/professors
- * @access Private/Admin
- * @param {Object} req.body - Professor data
- * @returns {Object} Created professor data
- */
 const addProfessor = async (req, res) => {
     try {
-        const { name, specialty, email, photoUrl } = req.body;
+        const { name, specialty, email } = req.body;
         
         if (!name || !specialty || !email) {
             throw new ValidationError('Name, specialty, and email are required');
+        }
+
+        const sanitizedData = sanitizeProfessorInput(req.body);
+        
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedData.email)) {
+            throw new ValidationError('Invalid email format');
+        }
+
+        const existingProfessor = await Professor.findOne({ where: { email: sanitizedData.email } });
+        if (existingProfessor) {
+            throw new ValidationError('Professor with this email already exists');
         }
 
         const professor = await Professor.create({
@@ -75,56 +79,17 @@ const addProfessor = async (req, res) => {
             data: professor
         });
     } catch (error) {
-        const statusCode = error instanceof ValidationError ? 400 : 500;
+        const statusCode = error.statusCode || 500;
         res.status(statusCode).json({
             success: false,
-            message: error.message || 'Failed to create professor',
-            error: error.message
-        });
-    }
-};
-
-/**
- * Update professor's active status
- * @route PATCH /api/professors/:id/status
- * @access Private/Admin
- * @param {string} req.params.id - Professor ID
- * @param {boolean} req.body.active - New status
- * @returns {Object} Updated professor data
- */
-const updateProfessorStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { active } = req.body;
-
-        if (typeof active !== 'boolean') {
-            throw new ValidationError('Invalid status value');
-        }
-
-        const professor = await Professor.findByPk(id);
-        if (!professor) {
-            throw new NotFoundError('Professor not found');
-        }
-
-        const updatedProfessor = await professor.update({ active });
-        res.json({
-            success: true,
-            message: `Professor status updated to ${active ? 'active' : 'inactive'}`,
-            data: updatedProfessor
-        });
-    } catch (error) {
-        const statusCode = error instanceof NotFoundError ? 404 : 
-                         error instanceof ValidationError ? 400 : 500;
-        res.status(statusCode).json({
-            success: false,
-            message: error.message || 'Failed to update status',
-            error: error.message
+            message: error.message,
+            error: process.env.NODE_ENV === 'production' ? undefined : error.message
         });
     }
 };
 
 module.exports = {
-    getAllActiveProfessors,
-    addProfessor,
-    updateProfessorStatus
+    getAllActiveProfessors: [professorRateLimiter, getAllActiveProfessors],
+    addProfessor: [professorRateLimiter, addProfessor],
+    updateProfessorStatus: [professorRateLimiter, updateProfessorStatus]
 };

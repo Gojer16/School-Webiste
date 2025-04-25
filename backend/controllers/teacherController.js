@@ -8,6 +8,7 @@ const { NotFoundError, ValidationError } = require('../errors');
 
 const DEFAULT_PAGE_SIZE = 10;
 const allowedUpdates = ['name', 'email', 'subject', 'phone', 'bio', 'imageUrl'];
+const MAX_BIO_LENGTH = 500;
 
 /**
  * Retrieve paginated list of active teachers
@@ -95,9 +96,25 @@ const updateTeacher = async (req, res) => {
         const teacher = await Teacher.findByPk(req.params.id);
         if (!teacher) throw new NotFoundError('Teacher not found');
 
-        const updates = Object.keys(req.body).filter(key => allowedUpdates.includes(key));
+        const updates = Object.keys(req.body).filter(key => 
+            allowedUpdates.includes(key) &&
+            typeof req.body[key] === 'string'
+        );
+
         const updatedData = updates.reduce((acc, key) => {
-            acc[key] = req.body[key];
+            acc[key] = sanitizeHtml(req.body[key], {
+                allowedTags: [],
+                allowedAttributes: {}
+            });
+            
+            if (key === 'bio') acc[key] = acc[key].substring(0, MAX_BIO_LENGTH);
+            if (key === 'email') {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(acc[key])) {
+                    throw new ValidationError('Invalid email format');
+                }
+                acc[key] = acc[key].toLowerCase();
+            }
+            
             return acc;
         }, {});
 
@@ -111,8 +128,8 @@ const updateTeacher = async (req, res) => {
         const statusCode = error instanceof NotFoundError ? 404 : 400;
         res.status(statusCode).json({
             success: false,
-            message: error.message || 'Failed to update teacher',
-            error: error.message
+            message: error.message,
+            error: process.env.NODE_ENV === 'production' ? undefined : error.message
         });
     }
 };

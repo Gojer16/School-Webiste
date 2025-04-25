@@ -10,9 +10,19 @@ const config = require('../config/config');
  * @returns {string} JWT token
  */
 const generateToken = (id, role) => {
-    return jwt.sign({ id, role }, config.JWT_SECRET, {
-        expiresIn: config.JWT_EXPIRATION
-    });
+    return jwt.sign(
+        { 
+            id,
+            role,
+            iat: Date.now(),
+            jti: crypto.randomBytes(16).toString('hex')
+        },
+        config.JWT_SECRET,
+        {
+            expiresIn: config.JWT_EXPIRES_IN,
+            algorithm: 'HS256'
+        }
+    );
 };
 
 /**
@@ -52,13 +62,18 @@ const registerUser = async (req, res) => {
         // Generate token
         const token = generateToken(user.id, user.role);
 
-        // Set secure HTTP-only cookie
+        // Set secure HTTP-only cookie with enhanced security options
         res.cookie('jwt', token, {
-            httpOnly: true,
-            secure: config.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+            ...config.COOKIE_OPTIONS,
+            signed: true,
+            path: '/',
+            domain: req.hostname,
+            expires: new Date(Date.now() + config.JWT_COOKIE_EXPIRES_IN * 60 * 60 * 1000)
         });
+
+        // Generate and set CSRF token
+        const csrfToken = crypto.randomBytes(32).toString('hex');
+        req.session.csrfToken = csrfToken;
 
         res.status(201).json({
             success: true,
@@ -88,8 +103,25 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        // Enhanced input validation
         if (!email?.trim() || !password?.trim()) {
             throw new ValidationError('Email and password required');
+        }
+
+        // Validate email format
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            throw new ValidationError('Invalid email format');
+        }
+
+        // Rate limit check
+        const ipKey = req.ip;
+        const attempts = await redisClient.incr(`login:${ipKey}`);
+        if (attempts === 1) {
+            await redisClient.expire(`login:${ipKey}`, 60 * 15); // 15 minutes
+        }
+        if (attempts > 5) {
+            throw new AuthError('Too many login attempts. Please try again later.');
         }
 
         const user = await User.findOne({ 
@@ -163,11 +195,20 @@ const getUserProfile = async (req, res) => {
 const changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        const user = await User.findByPk(req.user.id);
+        
+        if (!currentPassword || !newPassword) {
+            throw new ValidationError('Both passwords are required');
+        }
+        
+        if (newPassword.length < 8) {
+            throw new ValidationError('Password must be at least 8 characters');
+        }
 
-        if (!user) {
-            res.status(404);
-            throw new Error('User not found');
+        const user = await User.findByPk(req.user.id);
+        if (!user) throw new NotFoundError('User not found');
+
+        if (await user.matchPassword(newPassword)) {
+            throw new ValidationError('New password must be different from current password');
         }
 
         // Check current password
@@ -183,11 +224,17 @@ const changePassword = async (req, res) => {
 
         res.json({ message: 'Password updated successfully' });
     } catch (error) {
-        res.status(400).json({
-            message: error.message
+        const statusCode = error instanceof NotFoundError ? 404 : 
+                         error instanceof ValidationError ? 400 : 500;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message,
+            error: process.env.NODE_ENV === 'production' ? undefined : error.message
         });
     }
 };
+
+
 
 module.exports = {
     registerUser,

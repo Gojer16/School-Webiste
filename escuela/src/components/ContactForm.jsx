@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { contactService } from '../services/contactService';
+import DOMPurify from 'isomorphic-dompurify';
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const NAME_REGEX = /^[a-zA-Z\s]{2,50}$/;
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -11,20 +15,53 @@ const ContactForm = () => {
     message: ''
   });
 
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name || !NAME_REGEX.test(formData.name)) {
+      newErrors.name = 'Por favor ingrese un nombre válido (solo letras y espacios)';
+    }
+    
+    if (!formData.email || !EMAIL_REGEX.test(formData.email)) {
+      newErrors.email = 'Por favor ingrese un email válido';
+    }
+    
+    if (!formData.subject || formData.subject.length < 3) {
+      newErrors.subject = 'El asunto debe tener al menos 3 caracteres';
+    }
+    
+    if (!formData.message || formData.message.length < 10) {
+      newErrors.message = 'El mensaje debe tener al menos 10 caracteres';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const { mutate, isLoading } = useMutation({
-    mutationFn: (data) => contactService.sendContact(data),
+    mutationFn: (data) => contactService.sendContact({
+      ...data,
+      name: DOMPurify.sanitize(data.name),
+      subject: DOMPurify.sanitize(data.subject),
+      message: DOMPurify.sanitize(data.message)
+    }),
     onSuccess: () => {
       toast.success('¡Mensaje enviado con éxito!');
       setFormData({ name: '', email: '', subject: '', message: '' });
+      setErrors({});
     },
     onError: (error) => {
-      toast.error(error.message || 'Error al enviar el mensaje');
+      toast.error(error.response?.data?.message || 'Error al enviar el mensaje');
     }
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutate(formData);
+    if (validateForm()) {
+      mutate(formData);
+    }
   };
 
   const handleChange = (e) => {
@@ -48,6 +85,9 @@ const ContactForm = () => {
           <input
             type="text"
             id="name"
+            maxLength="50"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? 'name-error' : undefined}
             name="name"
             value={formData.name}
             onChange={handleChange}
@@ -113,12 +153,6 @@ const ContactForm = () => {
             </span>
           </button>
         </div>
-
-        {isLoading && (
-          <div className="bg-gradient-to-r from-[#150261]/20 to-[#C02E28]/20 p-4 rounded-lg mt-6 text-center animate-fadeIn">
-            <p className="text-[#150261] font-medium">¡Mensaje enviado con éxito!</p>
-          </div>
-        )}
       </form>
     </div>
   );

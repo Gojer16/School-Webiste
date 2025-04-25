@@ -19,10 +19,10 @@ const getAllAdmins = async (req, res) => {
         });
         res.json({ success: true, count: admins.length, data: admins });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ 
             success: false,
-            message: 'Server error retrieving administrators',
-            error: error.message 
+            message: 'Server error retrieving administrators'
         });
     }
 };
@@ -36,11 +36,17 @@ const assignAdminRole = async (req, res) => {
     try {
         const user = await User.findByPk(req.params.id);
         if (!user) throw new NotFoundError('User not found');
+        
         if (user.role === 'admin') {
-            return res.json({ 
+            return res.status(200).json({ 
                 success: true,
                 message: 'User already has administrator privileges',
-                data: user 
+                data: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                }
             });
         }
 
@@ -55,16 +61,20 @@ const assignAdminRole = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(error.statusCode || 500).json({
+        console.error(error);
+        const statusCode = error.statusCode || 500;
+        const message = (statusCode >= 400 && statusCode < 500) 
+            ? error.message 
+            : 'Error updating user role';
+        res.status(statusCode).json({
             success: false,
-            message: error.message || 'Error updating user role',
-            error: error.message
+            message
         });
     }
 };
 
 /**
- * Revoke administrator privileges (soft delete)
+ * Revoke administrator privileges
  * @route DELETE /api/admins/:id
  * @access Private/Admin
  */
@@ -74,20 +84,21 @@ const removeAdmin = async (req, res) => {
         if (!admin) throw new NotFoundError('Admin not found');
         if (admin.id === req.user.id) throw new ForbiddenError('Cannot remove your own admin privileges');
 
-        await admin.update({
-            role: 'user',
-            isActive: false
-        });
+        await admin.update({ role: 'user' });
 
         res.json({ 
             success: true,
             message: 'Admin privileges revoked successfully'
         });
     } catch (error) {
-        res.status(error.statusCode || 500).json({
+        console.error(error);
+        const statusCode = error.statusCode || 500;
+        const message = (statusCode >= 400 && statusCode < 500) 
+            ? error.message 
+            : 'Error removing administrator';
+        res.status(statusCode).json({
             success: false,
-            message: error.message || 'Error removing administrator',
-            error: error.message
+            message
         });
     }
 };

@@ -26,7 +26,8 @@ const Navbar = () => {
             <Link to="/nosotros" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Nosotros</Link>
             <Link to="/programas" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Programas</Link>
             <Link to="/contacto" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Contacto</Link>
-            {user ? (
+           {/*
+           {user ? (
               <div className="flex items-center space-x-4">
                 <Link to="/dashboard" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">
                   Mi Perfil
@@ -59,9 +60,13 @@ const Navbar = () => {
                 </Link>
               </div>
             )}
+
+           */}
+            
+
           </div>
 
-          {/* Telf Menu Boton */}
+          {/* Telf Menu boton */}
           <button
             className="md:hidden p-2 rounded-lg hover:bg-gradient-to-r hover:from-[#C02E28] hover:to-[#d83933] transition-all duration-300"
             onClick={toggleMenu}

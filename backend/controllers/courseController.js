@@ -1,62 +1,132 @@
 const Course = require('../models/Course');
+const { ValidationError, NotFoundError } = require('../errors');
+const sanitizeHtml = require('sanitize-html');
 
-// Get all courses
+const allowedCourseFields = ['title', 'description', 'duration', 'price', 'startDate'];
+
+// Input sanitization function
+const sanitizeCourseInput = (input) => {
+  return Object.keys(input).reduce((acc, key) => {
+    if (allowedCourseFields.includes(key)) {
+      acc[key] = sanitizeHtml(input[key], {
+        allowedTags: [],
+        allowedAttributes: {}
+      });
+    }
+    return acc;
+  }, {});
+};
+
 exports.getAllCourses = async (req, res) => {
   try {
-    const courses = await Course.findAll();
-    res.json(courses);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: courses } = await Course.findAndCountAll({
+      attributes: ['id', 'title', 'description', 'startDate'],
+      limit,
+      offset
+    });
+
+    res.json({
+      success: true,
+      currentPage: page,
+      totalPages: Math.ceil(count / limit),
+      totalItems: count,
+      data: courses
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve courses',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
-// Get a single course by ID
 exports.getCourseById = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-    res.json(course);
+    const course = await Course.findByPk(req.params.id, {
+      attributes: { exclude: ['createdAt', 'updatedAt'] }
+    });
+    if (!course) throw new NotFoundError('Course not found');
+    res.json({ success: true, data: course });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const statusCode = error instanceof NotFoundError ? 404 : 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
-// Create a new course
 exports.createCourse = async (req, res) => {
   try {
-    const course = await Course.create(req.body);
-    res.status(201).json(course);
+    if (!req.body.title || !req.body.description) {
+      throw new ValidationError('Title and description are required');
+    }
+
+    const sanitizedData = sanitizeCourseInput(req.body);
+    const course = await Course.create(sanitizedData);
+    
+    res.status(201).json({
+      success: true,
+      data: {
+        id: course.id,
+        title: course.title,
+        startDate: course.startDate
+      }
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const statusCode = error instanceof ValidationError ? 400 : 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
-// Update a course
 exports.updateCourse = async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-    await course.update(req.body);
-    res.json(course);
+    if (!course) throw new NotFoundError('Course not found');
+
+    const sanitizedData = sanitizeCourseInput(req.body);
+    const updatedCourse = await course.update(sanitizedData);
+    
+    res.json({
+      success: true,
+      data: {
+        id: updatedCourse.id,
+        title: updatedCourse.title,
+        description: updatedCourse.description
+      }
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const statusCode = error instanceof NotFoundError ? 404 : 400;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
-// Delete a course
 exports.deleteCourse = async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
+    if (!course) throw new NotFoundError('Course not found');
+
     await course.destroy();
-    res.json({ message: 'Course deleted successfully' });
+    res.json({
+      success: true,
+      message: 'Course scheduled for deletion'
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const statusCode = error instanceof NotFoundError ? 404 : 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message
+    });
   }
 };

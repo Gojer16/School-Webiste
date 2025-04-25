@@ -1,85 +1,82 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/api';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { createContext, useContext, useState, useEffect } from "react";
+import { authService } from "../services/api";
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
-    return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        checkAuth();
-    }, []);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      authService.getProfile()
+        .then(response => {
+          setUser(response.data);
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
 
-    const checkAuth = async () => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            try {
-                const { data } = await authService.getProfile();
-                setUser(data);
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                localStorage.removeItem('token');
-            }
-        }
-        setLoading(false);
-    };
+  const login = async (credentials) => {
+    try {
+      setError(null);
+      const response = await authService.login(credentials);
+      localStorage.setItem("token", response.data.token);
+      setUser(response.data.user);
+      return response.data;
+    } catch (err) {
+      setError(err.response?.data?.message || "An error occurred during login");
+      throw err;
+    }
+  };
 
-    const login = async (credentials) => {
-        try {
-            const { data } = await authService.login(credentials);
-            localStorage.setItem('token', data.token);
-            setUser(data);
-            toast.success('Login successful!');
-            navigate('/dashboard');
-            return true;
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Login failed');
-            return false;
-        }
-    };
+  const register = async (userData) => {
+    try {
+      setError(null);
+      const response = await authService.register(userData);
+      localStorage.setItem("token", response.data.token);
+      setUser(response.data.user);
+      return response.data;
+    } catch (err) {
+      setError(err.response?.data?.message || "An error occurred during registration");
+      throw err;
+    }
+  };
 
-    const register = async (userData) => {
-        try {
-            const { data } = await authService.register(userData);
-            localStorage.setItem('token', data.token);
-            setUser(data);
-            toast.success('Registration successful!');
-            navigate('/dashboard');
-            return true;
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Registration failed');
-            return false;
-        }
-    };
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
-        toast.success('Logged out successfully');
-        navigate('/');
-    };
+  const value = {
+    user,
+    loading,
+    error,
+    login,
+    register,
+    logout,
+    isAuthenticated: !!user
+  };
 
-    const value = {
-        user,
-        loading,
-        login,
-        register,
-        logout,
-        isAdmin: user?.role === 'admin',
-        isTeacher: user?.role === 'teacher',
-    };
-
-    return (
-        <AuthContext.Provider value={value}>
-            {!loading && children}
-        </AuthContext.Provider>
-    );
-}; 
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+};

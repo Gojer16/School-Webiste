@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');  // <-- Add this with other core dependencies
+const helmet = require('helmet'); // Security middleware
+const rateLimit = require('express-rate-limit');
 
 // Custom modules
 const { connectDB } = require('./config/database'); // Database connection utility
@@ -21,8 +23,14 @@ const app = express();  // <-- App must be initialized first
 // Then add middleware
 app.use(cookieParser());  // <-- Now this comes AFTER app initialization
 app.use(cors());
-app.use(express.json()); // Parse incoming JSON requests
-app.use(express.urlencoded({ extended: false })); // Parse URL-encoded request bodies
+app.use(express.json({ limit: '10kb' })); // Parse incoming JSON requests
+// Add near other middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(helmet()); // Add security headers
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+}));
 
 // Development logging
 if (config.NODE_ENV === 'development') {
@@ -50,7 +58,7 @@ app.use((err, req, res, next) => {
 });
 
 // Server configuration
-const PORT = config.PORT;
+const PORT = config.PORT || 3001;
 
 // Start the server
 app.listen(PORT, () => {
