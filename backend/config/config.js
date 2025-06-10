@@ -1,12 +1,15 @@
 require('dotenv').config();
 
-/**
+/**s
  * Safely parse a numeric environment variable.
  * Returns the parsed number if valid, otherwise falls back to the default value.
  *
  * @param {string} value - The environment variable value.
  * @param {number} defaultValue - The fallback value if parsing fails.
- * @returns {number}
+ * @returns {number}  
+ * 
+ * 
+ * 
  */
 function parseNumber(value, defaultValue) {
     const parsed = Number(value);
