@@ -1,0 +1,8 @@
+# backend/requirements.in
+fastapi
+uvicorn[standard]
+sqlalchemy
+mysqlclient
+bcrypt
+httpx
+python-dotenv
