@@ -10,7 +10,7 @@ const contactInfo = [
   {
     icon: Phone,
     title: "Teléfono",
-    description: "+58 424-1234567",
+    description: "+58 424-3440659",
     iconSize: "w-6 h-6", // Tamaño estándar para los demás íconos
   },
   {

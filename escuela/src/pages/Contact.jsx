@@ -15,7 +15,7 @@ const Contact = () => {
                                 <Phone className="text-white" size={24} />
                             </div>
                             <h3 className="text-xl font-semibold mb-2 text-[#150261]">Teléfono</h3>
-                            <p className="text-gray-600">+58 424-1234567</p>
+                            <p className="text-gray-600">+58 424-3440659</p>
                         </div>
 
                         <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-t-4 border-[#C02E28] group">
@@ -23,7 +23,7 @@ const Contact = () => {
                                 <Mail className="text-white" size={24} />
                             </div>
                             <h3 className="text-xl font-semibold mb-2 text-[#150261]">Email</h3>
-                            <p className="text-gray-600">info@etmff.edu.ve</p>
+                            <p className="text-gray-600">gojer@orlandoascanio.com</p>
                         </div>
 
                         <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-t-4 border-[#C02E28] group">
@@ -31,7 +31,7 @@ const Contact = () => {
                                 <MapPin className="text-white" size={24} />
                             </div>
                             <h3 className="text-xl font-semibold mb-2 text-[#150261]">Dirección</h3>
-                            <p className="text-gray-600">Av. Principal, Ciudad</p>
+                            <p className="text-gray-600">Carretera Nacional Villa de Cura, cruce con calle Sabana Larga, Cagua, Estado Aragua, Venezuela.</p>
                         </div>
                     </div>
 
