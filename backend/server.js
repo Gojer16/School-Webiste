@@ -16,6 +16,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const professorRoutes = require('./routes/professorRoutes');
 const authRoutes = require('./routes/authRoutes');
 const logger = require('./utils/logger')
+const { ValidationError, NotFoundError, AuthError } = require('./error'); // Assuming error.js is in the root
 
 const app = express();
 
@@ -77,18 +78,45 @@ app.all('*', (req, res) => {
 
 // --- Global Error Handling Middleware ---
 app.use((err, req, res, next) => {
-    logger.error(`Unhandled error: ${err.message}`, { // <--- Changed here
+    let statusCode = err.statusCode || 500; 
+    let message = err.message || 'Something went wrong on the server!';
+
+    if (err instanceof ValidationError) 
+        {
+        statusCode = err.statusCode; // Will be 400
+        message = err.message; 
+        logger.debug(`Validation Error: ${message}`, { url: req.originalUrl, method: req.method, ip: req.ip, validationErrors: err.errors });
+    } 
+    else if (err instanceof NotFoundError) 
+        {
+        statusCode = err.statusCode; // Will be 404
+        message = err.message; 
+        logger.info(`Not Found Error: ${message}`, { url: req.originalUrl, method: req.method, ip: req.ip }); // Log info for 404s, not error
+    } 
+    else if (err instanceof AuthError) 
+        {
+        statusCode = err.statusCode; // Will be 401
+        message = err.message; 
+        logger.warn(`Authentication Error: ${message}`, { url: req.originalUrl, method: req.method, ip: req.ip }); // Log as warning
+    } 
+    else 
+    {
+        statusCode = res.statusCode === 200 ? 500 : statusCode;
+        message = config.NODE_ENV === 'production' && statusCode === 500 ? 'Something went wrong on the server!' : err.message;
+    }
+
+    logger.error(`Error ${statusCode}: ${message}`, {
+        type: err.name, // e.g., 'ValidationError', 'Error'
         stack: err.stack,
         url: req.originalUrl,
         method: req.method,
         ip: req.ip,
-    })
+    });
 
-    const statusCode = err.statusCode || res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode).json({
         success: false,
-        message: err.message || 'Something went wrong on the server!',
-        stack: config.NODE_ENV === 'production' ? undefined : err.stack,
+        message: message, 
+        stack: config.NODE_ENV === 'production' ? undefined : err.stack, 
     });
 });
 
