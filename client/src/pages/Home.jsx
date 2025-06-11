@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
 import InstagramFeed from '../components/InstagramFeed';
-import escuela from '../assets/2.jpg';
+import escuela from '/2.jpg';
 
 const Home = () => {
   return (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import logo from '../assets/1.jpg';
+import logo from '/1.jpg';
 import { NAV_LINKS } from '../constants/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
