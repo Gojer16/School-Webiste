@@ -11,12 +11,10 @@ import './App.css';
 function App() {
     return (
         <Router>
-
-                <div className="min-h-screen bg-gray-50 flex flex-col">
-                    <Navbar />
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <Navbar />
                     <main className="flex-grow pt-16">
                     <Routes>
-                    {/* Public routes */}
                         <Route path="/" element={<Home />} />
                         <Route path="/nosotros" element={<About />} />
                         <Route path="/programas" element={<Programs />} />
@@ -24,9 +22,8 @@ function App() {
                         </Routes>
                     </main>
                     <Footer />
-                </div>
+            </div>
                 <Toaster position="top-right" />
-
         </Router>
     );
 }
