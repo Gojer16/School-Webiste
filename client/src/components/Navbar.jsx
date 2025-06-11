@@ -1,119 +1,89 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import logo from '../assets/1.jpg'
+import logo from '../assets/1.jpg';
+import { NAV_LINKS } from '../constants/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
+  const toggleMenu = () => setIsMenuOpen(prev => !prev);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const renderLinks = (isMobile = false) => (
+    NAV_LINKS.map(({ label, to }) => (
+      <Link
+        key={to}
+        to={to}
+        onClick={() => isMobile && setIsMenuOpen(false)}
+        className={`
+          ${isMobile ? 'block py-2' : ''}
+          hover:text-primary 
+          transition-all duration-300 
+          ${isMobile ? 'hover:translate-x-2' : 'transform hover:scale-105'}
+          ${location.pathname === to ? 'text-primary border-b-2 border-primary pb-1' : ''}
+        `}
+      >
+        {label}
+      </Link>
+    ))
+  );
+  useEffect(() => {
+  const handleEsc = (e) => e.key === 'Escape' && setIsMenuOpen(false);
+  document.addEventListener('keydown', handleEsc);
+  return () => document.removeEventListener('keydown', handleEsc);
+}, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#150261] via-[#1a0275] to-[#150261] text-white shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-secondary via-[#1a0275] to-secondary text-white shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
+          {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <img src={logo} alt="Logo" className="w-8 h-8 rounded-full transform group-hover:scale-110 transition-transform duration-300" />
-            <span className="font-semibold text-lg bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent group-hover:from-gray-200 group-hover:to-white transition-all duration-300">E.T.M.F.F.</span>
+            <img
+              src={logo}
+              alt="Logo"
+              className="w-8 h-8 rounded-full transform group-hover:scale-110 transition-transform duration-300"
+            />
+            <span className="font-semibold text-lg bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent group-hover:from-gray-200 group-hover:to-white transition-all duration-300">
+              E.T.M.F.F.
+            </span>
           </Link>
 
-          {/* PC Menu */}
+          {/* Desktop Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/nosotros" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Nosotros</Link>
-            <Link to="/programas" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Programas</Link>
-            <Link to="/contacto" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Contacto</Link>
-           
+            {renderLinks()}
           </div>
 
-          {/* Telf Menu boton */}
+          {/* Mobile Menu Toggle */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-gradient-to-r hover:from-[#C02E28] hover:to-[#d83933] transition-all duration-300"
+            className="md:hidden p-2 rounded-lg hover:bg-gradient-to-r hover:from-primary hover:to-[#d83933] transition-all duration-300"
             onClick={toggleMenu}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
-        {/* Telf Menu */}
+
+
+        {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 space-y-4">
-            <Link
-              to="/nosotros"
-              className="block py-2 hover:text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Nosotros
-            </Link>
-            <Link
-              to="/programas"
-              className="block py-2 hover:text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Programas
-            </Link>
-            <Link
-              to="/contacto"
-              className="block py-2 hover:text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contacto
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="block py-2 hover:text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Mi Perfil
-                </Link>
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className="block py-2 hover:text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Panel Admin
-                  </Link>
-                )}
-                <button
-                  onClick={() => {
-                    logout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="block w-full text-left py-2 text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-                >
-                  Cerrar Sesión
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="block py-2 hover:text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Iniciar Sesión
-                </Link>
-                <Link
-                  to="/register"
-                  className="block py-2 text-[#C02E28] hover:translate-x-2 transition-all duration-300"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Registrarse
-                </Link>
-              </>
-            )}
-          </div>
-        )}
+      <AnimatePresence>
+        <motion.div
+        key="mobile-menu"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3 }}
+        className="md:hidden py-4 space-y-4"
+        >
+        {renderLinks(true)}
+        </motion.div>
+      </AnimatePresence>
+)}
       </div>
     </nav>
   );
