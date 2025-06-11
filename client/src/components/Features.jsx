@@ -4,7 +4,7 @@ import FeatureCard from './FeatureCard';
 const Features = () => {
   return (
     <section className="py-16 bg-gradient-to-br from-white via-[#f0f8ff] to-white relative">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#150261] to-[#C02E28]"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary to-primary"></div>
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="animate-fadeIn animation-delay-100">

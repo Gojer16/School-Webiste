@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const Hero = () => {
   return (
     <header className="bg-gradient-to-r from-secondary via-[#1a0275] to-secondary text-white relative overflow-hidden">
@@ -11,6 +13,14 @@ const Hero = () => {
           <p className="text-xl text-gray-200 leading-relaxed border-l-4 border-primary pl-4 animate-slideInRight">
             Formando los líderes del mañana con excelencia académica y valores
           </p>
+          <div className="mt-8">
+            <Link
+            to="/programas"
+            className="inline-block px-6 py-3 bg-primary text-white font-medium rounded-full hover:bg-opacity-90 transition-all duration-300 shadow-md hover:scale-105"
+            >
+            Ver Programas
+            </Link>
+          </div>
         </div>
       </div>
     </header>
