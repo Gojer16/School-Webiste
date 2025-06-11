@@ -1,6 +1,13 @@
+import { motion } from 'framer-motion';
 
 const About = () => {
   return (
+    <motion.div
+  initial={{ opacity: 0, y: 40 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.8 }}
+  viewport={{ once: true }}
+>
     <div className="min-h-screen">
       {/* About Section */}
       <section className="py-16 bg-gradient-to-br from-[#150261]/5 via-white to-[#C02E28]/5 relative">
@@ -39,11 +46,15 @@ const About = () => {
                 </p>
               </div>
             </div>
+            <p className="text-lg mt-8 text-gray-700 italic mb-4">
+              “Más que una institución educativa — somos una comunidad comprometida con el crecimiento personal y profesional de nuestros estudiantes.”
+            </p>
           </div>
         </div>
       </section>
 
     </div>
+    </motion.div>
   );
 };
 
