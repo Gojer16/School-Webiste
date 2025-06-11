@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Hero from '../components/Hero';
@@ -9,12 +8,8 @@ import escuela from '../assets/2.jpg';
 const Home = () => {
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       <Hero />
-
-      {/* Features Section */}
       <Features />
-
       {/* About Section with School Photo */}
       <section className="bg-gradient-to-tr from-[#150261]/5 via-white to-[#C02E28]/5 py-16 relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#150261] to-[#C02E28]"></div>
@@ -40,10 +35,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Instagram Feed Section */}
       <InstagramFeed />
 
-      {/* CTA Section */}
       <section className="py-20 bg-gradient-to-tr from-[#150261]/10 via-white to-[#C02E28]/10 relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#150261] to-[#C02E28]"></div>
         <div className="container mx-auto px-4 text-center">

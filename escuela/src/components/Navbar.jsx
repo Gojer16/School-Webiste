@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import logo from '../assets/1.jpg'
-import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout, isAdmin } = useAuth();
+
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -26,44 +25,7 @@ const Navbar = () => {
             <Link to="/nosotros" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Nosotros</Link>
             <Link to="/programas" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Programas</Link>
             <Link to="/contacto" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">Contacto</Link>
-           {/*
-           {user ? (
-              <div className="flex items-center space-x-4">
-                <Link to="/dashboard" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">
-                  Mi Perfil
-                </Link>
-                {isAdmin && (
-                  <Link to="/admin" className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300">
-                    Panel Admin
-                  </Link>
-                )}
-                <button
-                  onClick={logout}
-                  className="bg-gradient-to-r from-[#C02E28] to-[#d83933] px-4 py-2 rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                >
-                  Cerrar Sesión
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/login"
-                  className="hover:text-[#C02E28] transform hover:scale-105 transition-all duration-300"
-                >
-                  Iniciar Sesión
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-gradient-to-r from-[#C02E28] to-[#d83933] px-4 py-2 rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                >
-                  Registrarse
-                </Link>
-              </div>
-            )}
-
-           */}
-            
-
+           
           </div>
 
           {/* Telf Menu boton */}

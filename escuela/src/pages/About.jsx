@@ -1,6 +1,3 @@
-import React from 'react';
-import { Calendar, Award, Users, BookOpen } from 'lucide-react';
-import ProfessorSection from '../components/ProfessorSection';
 
 const About = () => {
   return (
@@ -46,8 +43,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* Professors Section */}
-      <ProfessorSection />
     </div>
   );
 };

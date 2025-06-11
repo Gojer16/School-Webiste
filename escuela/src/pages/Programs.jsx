@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BookOpen, Code, Wrench, Briefcase, Users, Award, Clipboard, Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import CourseDetails from '../components/CourseDetails';
 
@@ -63,7 +63,7 @@ const Programs = () => {
       ]
     },
     {
-      icon: Wrench, // Cambiado de Tool a Wrench
+      icon: Wrench,
       title: "Electromecánica",
       description: "Formación técnica en sistemas mecánicos y eléctricos.",
       duration: "2.5 años",

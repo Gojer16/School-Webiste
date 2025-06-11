@@ -1,7 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
-// Functional Component
 const FeatureCard = ({ icon: Icon, title, description, linkTo }) => {
   return (
     <Link to={linkTo}>

@@ -1,6 +1,3 @@
-import React from 'react';
-import escuela from '../assets/2.jpg';
-
 const Hero = () => {
   return (
     <header className="bg-gradient-to-r from-[#150261] via-[#1a0275] to-[#150261] text-white relative overflow-hidden">

@@ -1,6 +1,3 @@
-import React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-
 const CourseDetails = ({ isOpen, course }) => {
   if (!isOpen) return null;
 

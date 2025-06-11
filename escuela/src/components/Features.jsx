@@ -1,4 +1,3 @@
-import React from 'react';
 import { GraduationCap, Users, Phone } from 'lucide-react';
 import FeatureCard from './FeatureCard';
 
