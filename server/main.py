@@ -10,7 +10,7 @@ from server.routers import auth, teachers
 app = FastAPI(
     title="School API",
     description="API for managing authentication and teacher profiles.",
-    version="1.0.0",
+    version="1.0.1",
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
