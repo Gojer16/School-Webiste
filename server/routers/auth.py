@@ -1,6 +1,6 @@
 """
-Authentication Router
----------------------
+Authentication Router (Async Version)
+-------------------------------------
 Provides endpoints for:
 - User Registration
 - User Login (JWT Authentication)
@@ -8,52 +8,43 @@ Provides endpoints for:
 - Protected Routes (requires authentication)
 
 This router integrates with FastAPI's dependency injection,
-SQLAlchemy for database access, and JWT-based authentication
-through the security module.
+SQLAlchemy AsyncSession for DB access, and JWT-based authentication.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from ..schemas import UserSchemas
-from sqlalchemy.orm import Session
 from ..models import user as user_model
 from .. import database, security
-from ..security import get_current_user
-
+from ..database import SessionLocal
 
 router = APIRouter()
 
-def get_db():
+# Dependency: async DB session
+async def get_db() -> AsyncSession:
     """
-    Database dependency.
-    Creates a session for each request and ensures
-    it is closed afterwards.
+    Async DB dependency.
+    Yields an AsyncSession from SessionLocal.
     """
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    async with SessionLocal() as session:
+        yield session
+
 
 @router.post("/register", response_model=UserSchemas.Read, status_code=status.HTTP_201_CREATED)
-def register(user: UserSchemas.Create, db: Session = Depends(get_db)):
+async def register(user: UserSchemas.Create, db: AsyncSession = Depends(get_db)):
     """
-    Register a new user.
-
-    - Validates if the email is unique.
-    - Hashes the password before storing.
-    - Persists the user into the database.
-
-    Args:
-        user (UserSchemas.Create): Incoming user data.
-        db (Session): SQLAlchemy session.
-
-    Returns:
-        UserSchemas.Read: Newly created user (without password).
+    Register a new user (async).
     """
-    db_user = db.query(user_model.User).filter(user_model.User.email == user.email).first()
+    # Check if email exists
+    result = await db.execute(
+        select(user_model.User).filter(user_model.User.email == user.email)
+    )
+    db_user = result.scalars().first()
 
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
+    # Hash password
     hashed_pw = security.hash_password(user.password)
 
     new_user = user_model.User(
@@ -63,28 +54,21 @@ def register(user: UserSchemas.Create, db: Session = Depends(get_db)):
     )
 
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
 
     return new_user
 
+
 @router.post("/login", status_code=status.HTTP_200_OK)
-def login(user: UserSchemas.Login, db: Session = Depends(get_db)):
+async def login(user: UserSchemas.Login, db: AsyncSession = Depends(get_db)):
     """
-    Authenticate a user and return a JWT token.
-
-    - Verifies user credentials.
-    - Returns JWT for authorized sessions.
-
-    Args:
-        user (UserSchemas.Login): Email & password payload.
-        db (Session): SQLAlchemy session.
-
-    Returns:
-        dict: JWT access token and type.
+    Authenticate a user (async).
     """
-
-    db_user = db.query(user_model.User).filter(user_model.User.email == user.email).first()
+    result = await db.execute(
+        select(user_model.User).filter(user_model.User.email == user.email)
+    )
+    db_user = result.scalars().first()
 
     if not db_user or not security.verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
@@ -92,18 +76,13 @@ def login(user: UserSchemas.Login, db: Session = Depends(get_db)):
     token = security.create_access_token(
         {"sub": db_user.email, "role": db_user.role}
     )
-    
+
     return {"access_token": token, "token_type": "bearer"}
 
+
 @router.get("/me", response_model=UserSchemas.Read, status_code=status.HTTP_200_OK)
-def read_users_me(current_user: user_model.User = Depends(security.get_current_user)):
+async def read_users_me(current_user: user_model.User = Depends(security.get_current_user)):
     """
-    Retrieve the currently authenticated user.
-
-    Args:
-        current_user (User): Injected from JWT token via dependency.
-
-    Returns:
-        UserSchemas.Read: User object of current session.
+    Retrieve current user (async).
     """
     return current_user
