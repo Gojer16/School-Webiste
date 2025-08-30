@@ -11,12 +11,15 @@ Security best practices followed:
 - Secret keys loaded from environment.
 - JWT tokens include standard claims (exp, iat, sub).
 """
+from sqlalchemy.future import select
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 import os
 from sqlalchemy.orm import Session
 from . import database, models
+from .database import SessionLocal
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from dotenv import load_dotenv
@@ -29,20 +32,16 @@ if not SECRET_KEY:
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-def get_db():
+# Dependency: async DB session
+async def get_db() -> AsyncSession:
     """
-    Provides a database session for FastAPI routes via dependency injection.
-    Ensures session is closed after request finishes.
-    Usage in route:
-        db: Session = Depends(get_db)
+    Async DB dependency.
+    Yields an AsyncSession from SessionLocal.
     """
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    async with SessionLocal() as session:
+        yield session
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -92,9 +91,9 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme), 
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(database.get_db)
 ):
     """
     FastAPI dependency to retrieve the currently authenticated user from a JWT token.
@@ -115,13 +114,15 @@ def get_current_user(
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    user = db.query(models.user.User).filter(models.user.User.email == email).first()
+    result = await db.execute(select(models.user.User).filter(models.user.User.email == email))
+    user = result.scalars().first()
     if user is None:
         raise credentials_exception
 
