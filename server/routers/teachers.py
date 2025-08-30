@@ -10,7 +10,7 @@ from ..schemas import TeacherSchemas
 from ..security import get_current_user, get_db
 from .. import database
 
-router = APIRouter(prefix="/teachers", tags=["teachers"])
+router = APIRouter()
 
 @router.post("/", response_model=TeacherSchemas.Read)
 def create_profile(
