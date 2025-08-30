@@ -18,8 +18,9 @@ from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 import os
 from sqlalchemy.orm import Session
-from . import database, models
-from .database import SessionLocal
+from . import models
+from . import database
+from .database import SessionLocal, get_db
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from dotenv import load_dotenv
