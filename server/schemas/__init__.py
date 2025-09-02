@@ -11,7 +11,7 @@ Usage:
     teacher_read = TeacherSchemas.Read(...)
 """
 from .userSchemas import UserCreate, UserRead, UserLogin
-from .TeacherProfileSchemas import TeacherProfileCreate, TeacherProfile
+from .TeacherProfileSchemas import ReadTeacherProfile, TeacherProfileCreate, TeacherBase
 
 class UserSchemas:
     """
@@ -32,5 +32,7 @@ class TeacherSchemas:
         Create: Schema used when creating a new teacher profile.
         Read: Schema used to read teacher profile information (response model).
     """
+    Base = TeacherBase
     Create = TeacherProfileCreate
-    Read = TeacherProfile
+    Read = ReadTeacherProfile
+    
