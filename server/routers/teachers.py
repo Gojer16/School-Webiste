@@ -9,31 +9,54 @@ from ..crud import teacherProfileCrud as crud
 from ..schemas import TeacherSchemas
 from ..security import get_current_user, get_db
 from .. import database
+from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.post("/", response_model=TeacherSchemas.Read)
-def create_profile(
+@router.post("/", response_model=TeacherSchemas.Read, status_code=201)
+async def create_profile(
     profile: TeacherSchemas.Create,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
     """
-    Create a teacher profile for the currently authenticated user.
+    Admin-only endpoint to create a teacher profile.
 
-    - Only 'admin' users are authorized.
-    - Returns the created teacher profile. 
+    Expected body example:
+    {
+      "name": "Sansa Stark",
+      "bio": "Sansa Stark is the Queen IN THE NORTH",
+      "image_url": "hello.jpg"
+    }
+
+    Behavior:
+    - If `email` and `password` included: these will be used to create the linked User.
+    - Otherwise a User is auto-created with a generated email & random password.
+    - Returns the created TeacherProfile (including user_id).
     """
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated.")
-    
+
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admins can create teacher profiles.")
 
-    return crud.create_teacher_profile(db, user_id=current_user.id, profile=profile)
+    teacher = await crud.create_teacher_with_auto_user(
+        db=db,
+        name=profile.name,
+        bio=profile.bio or "",
+        image_url=profile.image_url or "",
+        is_active=profile.is_active,
+        email=profile.email,         # optional
+        password=profile.password,   # optional
+        user_id=None                 
+    )
+
+    return teacher
 
 @router.get("/", response_model=list[TeacherSchemas.Read])
-def list_teachers_paginated(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+async def list_teachers_paginated(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     """
     List active teacher profiles with pagination.
 
@@ -44,10 +67,10 @@ def list_teachers_paginated(skip: int = 0, limit: int = 10, db: Session = Depend
     Returns:
         A paginated list of teacher profiles.
     """
-    return crud.list_active_teachers(db, skip=skip, limit=limit)
+    return await crud.list_active_teachers(db, skip=skip, limit=limit)
 
 @router.get("/all", response_model=list[TeacherSchemas.Read])
-def list_all_teachers(db: Session = Depends(get_db)):
+async def list_all_teachers(db: Session = Depends(get_db)):
     """
     List all active teacher profiles without pagination.
 
@@ -56,7 +79,7 @@ def list_all_teachers(db: Session = Depends(get_db)):
     Returns:
         A list of all teacher profiles.
     """
-    return crud.get_active_teachers(db)
+    return await crud.get_active_teachers(db)
 
 @router.get("/{teacher_id}", response_model=TeacherSchemas.Read)
 def read_teacher(teacher_id: int, db: Session = Depends(get_db)):
